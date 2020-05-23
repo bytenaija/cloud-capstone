@@ -36,12 +36,14 @@ export default class App extends Component<AppProps, AppState> {
   render() {
     return (
       <div>
-        <Segment style={{ padding: '8em 0em' }} vertical>
+        <Segment style={{ padding: '2em 0em' }} vertical>
           <Grid container stackable verticalAlign="middle">
             <Grid.Row>
               <Grid.Column width={16}>
                 <Router history={this.props.history}>
+                <div style={{marginBottom: '5rem'}}>
                   {this.generateMenu()}
+                  </div>
 
                   {this.generateCurrentPage()}
                 </Router>

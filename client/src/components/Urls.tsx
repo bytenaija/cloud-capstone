@@ -160,7 +160,8 @@ export class Urls extends React.PureComponent<UrlsProps, UrlsState> {
             <Grid.Row key={url.urlId}>
              
               <Grid.Column width={7} verticalAlign="middle">
-                {url.url}
+              <a href={url.url} target="_blank">{url.url}</a>
+                
               </Grid.Column>
               <Grid.Column width={6} floated="right">
                 {url.description}
