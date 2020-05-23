@@ -1,7 +1,5 @@
-org: everistusolumese
-app: serverless-todo-app
 service:
-  name: serverless-todo
+  name: serverless-evly
 
 plugins:
   - serverless-webpack
@@ -17,17 +15,18 @@ provider:
   region: ${opt:region, 'us-east-2'}
 
   environment:
-    TODOS_TABLE: Todos-bytenaija-${self:provider.stage}
-    TODO_INDEX: TodoIdIndex
+    URLS_TABLE: Evly-bytenaija-${self:provider.stage}
+    EVLY_INDEX: EvlyIdIndex
+    EVLY_INDEX_GSI: EvlyIdIndexGsi2
     CONNECTIONS_TABLE: Connections-${self:provider.stage}
-    IMAGES_S3_BUCKET: serverless-todo-images-bytenaija-${self:provider.stage}
+    IMAGES_S3_BUCKET: serverless-evly-images-bytenaija-${self:provider.stage}
     SIGNED_URL_EXPIRATION: 300
     AUTH_0_SECRET_ID: Auth0Secret-${self:provider.stage}
     AUTH_0_SECRET_FIELD: AUTH_0_SECRET
     AUTH_0_SECRET: m_nkS_w5MseSSyTB9kZDmqlfdX38dUwOdYHQTxGt_EpL4JtfBoR-4CzeRgjXbcDB
 
 custom:
-  topicName: todosTopic-${self:provider.stage}
+  topicName: evlysTopic-${self:provider.stage}
 
   serverless-offline:
     port: 3003
@@ -42,29 +41,29 @@ custom:
     api:
       info:
         version: v1.0.0
-        title: Todos API
-        description: Serverless application for Todos list
+        title: Evly API
+        description: Serverless application for Evly list
     models:
-      - name: CreateTodoRequest
+      - name: CreateEvlyRequest
         contentType: application/json
-        schema: ${file(models/create-todo-request.json)}
+        schema: ${file(models/create-evly-request.json)}
 
 functions:
   Auth:
     handler: src/lambda/auth/auth0Authorizer.handler
 
-  # TODO: Configure this function
-  GetTodos:
-    handler: src/lambda/http/getTodos.handler
+  # EVLY: Configure this function
+  GetUrls:
+    handler: src/lambda/http/getUrls.handler
     events:
       - http:
           method: get
-          path: todos
+          path: urls
           cors: true
           authorizer: Auth
           # reqValidatorName: RequestBodyValidator
           documentation:
-            description: Get the Todo list
+            description: Get the URL list
     deploymentSettings:
       type: Linear10PercentEvery1Minute
       alias: Live
@@ -72,26 +71,26 @@ functions:
       - Effect: Allow
         Action:
           - dynamodb:Query
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.URLS_TABLE}
       - Effect: Allow
         Action:
           - dynamodb:Query
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.TODO_INDEX}
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.URLS_TABLE}/index/${self:provider.environment.EVLY_INDEX}
 
-  # TODO: Configure this function
-  CreateTodo:
-    handler: src/lambda/http/createTodo.handler
+  # EVLY: Configure this function
+  CreateUrl:
+    handler: src/lambda/http/createUrl.handler
     events:
       - http:
           method: post
-          path: todos
+          path: urls
           cors: true
           authorizer: Auth
           # reqValidatorName: RequestBodyValidator
           documentation:
-            description: Create a new todo
+            description: Create a new shortend url
             requestModels:
-              'application/json': CreateTodoRequest
+              'application/json': CreateEvlyRequest
     deploymentSettings:
       type: Linear10PercentEvery1Minute
       alias: Live
@@ -100,71 +99,71 @@ functions:
       - Effect: Allow
         Action:
           - dynamodb:PutItem
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.URLS_TABLE}
       - Effect: Allow
         Action:
           - dynamodb:PutItem
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/${self:provider.environment.TODO_INDEX}
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.URLS_TABLE}/${self:provider.environment.EVLY_INDEX}
 
-  # TODO: Configure this function
-  UpdateTodo:
-    handler: src/lambda/http/updateTodo.handler
+  # EVLY: Configure this function
+  UpdateUrl:
+    handler: src/lambda/http/updateUrl.handler
     iamRoleStatementsInherit: true
     iamRoleStatements:
       - Effect: Allow
         Action:
           - dynamodb:UpdateItem
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.TODO_INDEX}
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.URLS_TABLE}/index/${self:provider.environment.EVLY_INDEX}
     events:
       - http:
           method: patch
-          path: todos/{todoId}
+          path: urls/{urlId}
           cors: true
           authorizer: Auth
       - http:
           method: put
-          path: todos/{todoId}
+          path: urls/{urlId}
           cors: true
           authorizer: Auth
           # reqValidatorName: RequestBodyValidator
         documentation:
-          description: Update a todo
+          description: Update a url
     deploymentSettings:
       type: Linear10PercentEvery1Minute
       alias: Live
 
-  # TODO: Configure this function
-  DeleteTodo:
-    handler: src/lambda/http/deleteTodo.handler
+  # EVLY: Configure this function
+  DeleteUrl:
+    handler: src/lambda/http/deleteUrl.handler
     iamRoleStatementsInherit: true
     iamRoleStatements:
       - Effect: Allow
         Action:
           # - dynamodb:Scan
           - dynamodb:DeleteItem
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.URLS_TABLE}
     events:
       - http:
           method: delete
-          path: todos/{todoId}
+          path: urls/{urlId}
           cors: true
           authorizer: Auth
           # reqValidatorName: RequestBodyValidator
           documentation:
-            description: Delete a todo
+            description: Delete a url
             requestModels:
-              # 'application/json': CreateTodoRequest
+              # 'application/json': CreateEvlyRequest
     deploymentSettings:
       type: Linear10PercentEvery1Minute
       alias: Live
 
-  # TODO: Configure this function
+  # EVLY: Configure this function
   GenerateUploadUrl:
     handler: src/lambda/http/generateUploadUrl.handler
     events:
       - http:
           method: post
-          path: todos/{todoId}/attachment
+          path: urls/{urlId}/attachment
           cors: true
           # authorizer: Auth
           documentation:
@@ -179,7 +178,7 @@ functions:
       alias: Live
 
 resources:
-  # TODO: Add any necessary AWS resources
+  # EVLY: Add any necessary AWS resources
   Resources:
     GatewayResponseDefault4XX:
       Type: AWS::ApiGateway::GatewayResponse
@@ -193,25 +192,27 @@ resources:
         RestApiId:
           Ref: ApiGatewayRestApi
 
-    TodosDynamoDBTable:
+    EvlyDynamoDBTable:
       Type: AWS::DynamoDB::Table
       Properties:
         AttributeDefinitions:
           - AttributeName: userId
             AttributeType: S
-          - AttributeName: todoId
+          - AttributeName: urlId
             AttributeType: S
           - AttributeName: createdAt
+            AttributeType: S
+          - AttributeName: shortUrl
             AttributeType: S
         KeySchema:
           - AttributeName: userId
             KeyType: HASH
-          - AttributeName: todoId
+          - AttributeName: urlId
             KeyType: RANGE
         BillingMode: PAY_PER_REQUEST
-        TableName: ${self:provider.environment.TODOS_TABLE}
+        TableName: ${self:provider.environment.URLS_TABLE}
         LocalSecondaryIndexes:
-          - IndexName: ${self:provider.environment.TODO_INDEX}
+          - IndexName: ${self:provider.environment.EVLY_INDEX}
             KeySchema:
               - AttributeName: userId
                 KeyType: HASH

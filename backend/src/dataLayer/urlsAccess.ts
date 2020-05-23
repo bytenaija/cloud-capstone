@@ -1,7 +1,7 @@
 import * as AWS from 'aws-sdk'
 import { DocumentClient } from 'aws-sdk/clients/dynamodb'
 
-import { TodoItem } from '../models/TodoItem'
+import { UrlItem } from '../models/UrlItem'
 
 const s3 = new AWS.S3({
   signatureVersion: 'v4'
@@ -9,18 +9,18 @@ const s3 = new AWS.S3({
 const bucketName = process.env.IMAGES_S3_BUCKET
 const urlExpiration = process.env.SIGNED_URL_EXPIRATION
 
-export class TodoAccess {
+export class UrlAccess {
   constructor(
     private readonly docClient: DocumentClient = createDynamoDBClient(),
-    private readonly todosTable = process.env.TODOS_TABLE
+    private readonly urlsTable = process.env.URLS_TABLE
   ) {}
 
-  async getAllTodos(userId: string): Promise<TodoItem[]> {
-    console.log('Getting all todos for user:', userId)
+  async getAllUrls(userId: string): Promise<UrlItem[]> {
+    console.log('Getting all urls for user:', userId)
 
     const result = await this.docClient
       .query({
-        TableName: this.todosTable,
+        TableName: this.urlsTable,
         KeyConditionExpression: '#userId = :userId',
         ExpressionAttributeNames: {
           '#userId': 'userId'
@@ -32,77 +32,78 @@ export class TodoAccess {
       .promise()
 
     const items = result.Items
-    console.log('getAllTodos result:', items)
-    return items as TodoItem[]
+    console.log('getAllUrls result:', items)
+    return items as UrlItem[]
   }
 
-  async CreateTodo(todo): Promise<TodoItem> {
-    console.log('creating todo:', todo)
+
+
+  async CreateUrl(url): Promise<UrlItem> {
+    console.log('creating url:', url)
 
     await this.docClient
       .put({
-        TableName: this.todosTable,
-        Item: todo
+        TableName: this.urlsTable,
+        Item: url
       })
       .promise()
 
-    return todo
+    return url
   }
 
-  async deleteTodo(todoId: string, userId: string): Promise<string> {
-    console.log('Deleting todo:', todoId)
+  async deleteUrl(urlId: string, userId: string): Promise<string> {
+    console.log('Deleting url:', urlId)
 
     await this.docClient
       .delete({
-        TableName: this.todosTable,
+        TableName: this.urlsTable,
         Key: {
-          todoId,
+          urlId,
           userId
         }
       })
       .promise()
 
-    console.log('Todo deleted. todoId:', todoId)
+    console.log('Url deleted. urlId:', urlId)
     return ''
   }
 
-  async updateTodo(
+  async updateUrl(
     userId: string,
-    todoId: string,
-    updatedTodo
+    urlId: string,
+    updatedUrl
   ): Promise<string> {
-    console.log('updating todo:', todoId, updatedTodo)
+    console.log('updating todo:', urlId, updatedUrl)
 
     await this.docClient
       .update({
-        TableName: this.todosTable,
+        TableName: this.urlsTable,
         Key: {
-          todoId,
+          urlId,
           userId
         },
-        UpdateExpression: 'set #name = :name, dueDate = :duedate, done = :done',
+        UpdateExpression: 'set #url = :url, description = :description',
         ExpressionAttributeValues: {
-          ':name': updatedTodo.name,
-          ':duedate': updatedTodo.dueDate,
-          ':done': updatedTodo.done
+          ':url': updatedUrl.url,
+          ':description': updatedUrl.description,
         },
         ExpressionAttributeNames: {
-          '#name': 'name'
+          '#url': 'url'
         }
       })
       .promise()
 
-    console.log('Todo updated:', updatedTodo)
+    console.log('Url updated:', updatedUrl)
 
-    return updatedTodo
+    return updatedUrl
   }
 
-  async generateUploadUrl(todoId: string): Promise<string> {
-    console.log('generating todo', todoId)
+  async generateUploadUrl(urlId: string): Promise<string> {
+    console.log('generating url', urlId)
 
     const url = s3.getSignedUrl('putObject', {
       Bucket: bucketName,
-      Key: todoId,
+      Key: urlId,
       Expires: urlExpiration
     })
 

@@ -5,17 +5,17 @@ import {
   APIGatewayProxyHandler
 } from 'aws-lambda'
 
-import { generateUploadUrl } from '../../businessLogic/todos'
+import { generateUploadUrl } from '../../businessLogic/url'
 
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
-  const todoId = event.pathParameters.todoId
+  const urlId = event.pathParameters.urlId
   console.log('[generateUploadUrl]: Processing event: ', event)
 
-  // TODO: Return a presigned URL to upload a file for a TODO item with the provided id
+  // URL: Return a presigned URL to upload a file for a URL item with the provided id
 
-  const uploadUrl = await generateUploadUrl(todoId)
+  const uploadUrl = await generateUploadUrl(urlId)
 
   return {
     statusCode: 200,

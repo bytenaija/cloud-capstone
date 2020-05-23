@@ -1,23 +1,29 @@
 import 'source-map-support/register'
+
 import {
   APIGatewayProxyEvent,
-  APIGatewayProxyResult,
-  APIGatewayProxyHandler
+  APIGatewayProxyHandler,
+  APIGatewayProxyResult
 } from 'aws-lambda'
 
 import { parseUserId } from '../../auth/utils'
-import { getAllTodos } from '../../businessLogic/todos'
+import { UpdateUrlRequest } from '../../requests/UpdateUrlRequest'
+import { updateUrl } from '../../businessLogic/url'
 
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
-  // TODO: Get all TODO items for a current user
-  console.log('[getTodos.ts] Processing event:', event)
+  const urlId = event.pathParameters.urlId
+  const updatedUrl: UpdateUrlRequest = JSON.parse(event.body)
+  console.log('[update url]: Processing event: ', event)
+
+  // URL: Update a URL item with the provided id using values in the "updatedUrl" object
 
   const authorization = event.headers.Authorization
   const jwtToken = authorization.split(' ')[1]
   const userId = parseUserId(jwtToken)
-  const todos = await getAllTodos(userId)
+  const item = await updateUrl(userId, urlId, updatedUrl)
+  console.log('updatedResult', item)
 
   return {
     statusCode: 200,
@@ -25,8 +31,6 @@ export const handler: APIGatewayProxyHandler = async (
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Credentials': true
     },
-    body: JSON.stringify({
-      todos
-    })
+    body: JSON.stringify(item)
   }
 }
